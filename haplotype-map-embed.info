@@ -1,0 +1,4 @@
+name = Haplotype Map Embed
+description = Embeds haplotype data visualization tool in a Tripal site.
+package = Tripal Extensions
+core = 7.
