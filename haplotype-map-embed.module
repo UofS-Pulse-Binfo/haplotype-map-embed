@@ -1,0 +1,112 @@
+<?php
+/**
+ *
+ * The main functionality of this module.
+ * Embed module haplotype-map to visualize haplotype data in tripal sites.
+ *
+ * about haplotype-map:
+ * developed by Venkat Bandi(https://github.com/kiranbandi)
+ * the module is available in https://github.com/kiranbandi/haplotype-map
+*/
+/**
+ * Implements hook_menu(). 1
+ */
+function haplotypembed_menu(){
+  $default_map = NULL;
+
+  $h_maps = haplotype_extract_available_maps(, );
+
+  // $items['haplotype-map'] = array(
+  //   'title' => t('Haplotype data Visulization')，
+  //   'page callback' => 'page_list_available_maps',
+  //   'access arguments' => array('view haplotype map'),
+  //   'type' => MENU_NORMAL_ITEM,
+  // );
+
+  //administration
+
+  //manage files
+
+  // add
+
+  // edit
+
+  // delete
+
+  // manage access
+
+  return $items;
+}
+
+
+
+ /**
+ * Implements hook_permission().2
+ */
+
+function haplotypembed_permission(){
+  return array(
+    'view haplotype map' => array(
+      'title' => t('Access Public Haplotype maps.'),
+    ),
+    'view private haplotype map' => array(
+      'title' => t('Access Private Haplotype maps.'),
+    ),
+  );
+
+}
+
+
+
+ /**
+  * Implements hook_libraries_info(). last
+  */
+  function haplotypembed_libraries_info(){
+    $libraries['haplotype-map'] = array(
+      'name' => 'haplotype-map',
+      'vendor url' => 'https://github.com/kiranbandi/haplotype-map',
+      'version' => '0.0.1',
+      'download url' => ,''
+    );
+    return $libraries;
+  }
+
+// <html lang="en">
+//   <head><meta charset="utf-8">
+//   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+//   <meta name="viewport" content="width=device-width,initial-scale=1">
+//   <meta name="description" content="Haplotype Visualization Browser developed at University of Saskatchewan">
+//   <meta name="author" content="kiranbandi">
+//   <title>SNPs Haplotype Visualization</title>
+//   <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,400italic" rel="stylesheet"></head>
+//     <body>
+//       <div id="root"></div>
+//       <script src="bundle/main.bundle.1cd727076111f0e998e1.js"></script>
+//     </body>
+// </html>
+
+ /**
+ * Implements hook_form().3
+ */
+ function haplotypembed_form($form, &$form_state){
+   // check for available dataset, ask user to pick and feed to haplotype-map
+
+
+   // include haplotype-map here
+
+
+
+
+   return $form;
+ }
+
+
+ /**
+  *  a mark-up to list all the available haplotype maps.
+  */
+
+function page_list_available_maps(){
+  $output = '';
+
+  return $output;
+}
