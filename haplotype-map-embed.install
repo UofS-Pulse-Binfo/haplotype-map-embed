@@ -1,0 +1,45 @@
+<?php
+  /**
+   * @file
+   * Installation of this module.
+   */
+
+  /**
+   * Implements hook_schema().
+   * to include table haplotypemap_files in DB with keys and indexes
+   */
+
+   function haplotypembed_files_schema(){
+     $schema = array();
+
+     $schema['haplotypembed_files'] = array(
+       'description' => 'Keeps track of haplotype map files for embeded module haplotype-map',
+       'fields' => array(
+         'haplotypembed_files_id' => array(
+
+         ),
+         'file_path' => array(
+
+         ),
+         'default_file_path' => array(
+
+         ),
+         'description' => array(
+
+         ),
+         'human_readable_name' => array(
+
+         ),
+         'all_germplasm' => array(
+
+         ),
+         'default_germplasm' => array(
+
+         ),
+       ),
+       'primary key' => array('haplotypembed_files_id'),
+
+     );
+
+
+   }

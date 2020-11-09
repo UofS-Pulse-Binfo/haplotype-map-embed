@@ -12,9 +12,10 @@
  * Implements hook_menu(). 1
  */
 function haplotypembed_menu(){
-  $default_map = NULL;
-
-  $h_maps = haplotype_extract_available_maps(, );
+  // $default_map = NULL;
+  //
+  // //get all
+  // $h_maps = haplotype_extract_available_maps(, );
 
   // $items['haplotype-map'] = array(
   //   'title' => t('Haplotype data Visulization')，
@@ -22,16 +23,54 @@ function haplotypembed_menu(){
   //   'access arguments' => array('view haplotype map'),
   //   'type' => MENU_NORMAL_ITEM,
   // );
+  $items = array();
+
+  $items['haplotype-map_embed'] = array(
+    'title' => 'Haplotype Maps',
+    'description' => 'Embeded haplotype map module for users to view haplotype files.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('haplotypemap_embed_form'),
+    'access callback' => TRUE,
+  );
 
   //administration
-
-  //manage files
-
+  //manage files, list
+  $items['admin/tripal/extension/haplotype-map_embed'] = array(
+    'title' => 'Embeded Haplotype map',
+    'description' => 'Provides users embeded haplotype maps.',
+    'page callback' => 'haplotypemap_embed_admin_list',
+    'page arguments' => array(),
+    'access arguments' => array('administer tripal'),
+    'file' => 'includes/haplotype-map_embed.admin.inc',
+  );
   // add
-
+  $items['admin/tripal/extension/haplotype-map_embed/add'] = array(
+    'title' => 'Add Haplotype map',
+    'description' => 'Add a haplotype map in list.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('haplotypemap_embed_admin_file_form', 'add'),
+    'access arguments' => array('administer tripal'),
+    'file' => 'includes/haplotype-map_embed.admin.inc',
+  );
   // edit
-
+  $items['admin/tripal/extension/haplotype-map_embed/edit'] = array(
+    'title' => 'Edit Haplotype map',
+    'description' => 'Edit a haplotype map in list.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('haplotypemap_embed_admin_file_form', 'edit'),
+    'access arguments' => array('administer tripal'),
+    'file' => 'includes/haplotype-map_embed.admin.inc',
+  );
   // delete
+  $items['admin/tripal/extension/haplotype-map_embed/delete'] = array(
+    'title' => 'Delete Haplotype map',
+    'description' => 'Delete a haplotype map in list.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('haplotypemap_embed_admin_file_form', 'delete'),
+    'access arguments' => array('administer tripal'),
+    'file' => 'includes/haplotype-map_embed.admin.inc',
+  );
+
 
   // manage access
 
@@ -40,22 +79,21 @@ function haplotypembed_menu(){
 
 
 
- /**
- * Implements hook_permission().2
- */
-
-function haplotypembed_permission(){
-  return array(
-    'view haplotype map' => array(
-      'title' => t('Access Public Haplotype maps.'),
-    ),
-    'view private haplotype map' => array(
-      'title' => t('Access Private Haplotype maps.'),
-    ),
-  );
-
-}
-
+//  /**
+//  * Implements hook_permission().2
+//  */
+//
+// function haplotypembed_permission(){
+//   return array(
+//     'view haplotype map' => array(
+//       'title' => t('Access Public Haplotype maps.'),
+//     ),
+//     'view private haplotype map' => array(
+//       'title' => t('Access Private Haplotype maps.'),
+//     ),
+//   );
+//
+// }
 
 
  /**
@@ -66,7 +104,7 @@ function haplotypembed_permission(){
       'name' => 'haplotype-map',
       'vendor url' => 'https://github.com/kiranbandi/haplotype-map',
       'version' => '0.0.1',
-      'download url' => ,''
+      'download url' => ,'https://github.com/kiranbandi/haplotype-map'
     );
     return $libraries;
   }
@@ -85,21 +123,23 @@ function haplotypembed_permission(){
 //     </body>
 // </html>
 
- /**
- * Implements hook_form().3
- */
- function haplotypembed_form($form, &$form_state){
-   // check for available dataset, ask user to pick and feed to haplotype-map
+/**
+* Implements hook_form().
+*/
+function haplotypemap_embed_form($form, &$form_state){
+  // check for available dataset, ask user to pick and feed to haplotype-map
+  //section 1, ask user to select a file first
+  $maps = page_list_available_maps();
 
 
-   // include haplotype-map here
+  //section 2, give option of using default file or filter for specific germplasm
+  //S2.a include haplotype-map using default file
+
+  //S2.b filter file for the germpasm user choose then display with haplotype map viewer
 
 
-
-
-   return $form;
- }
-
+  return $form;
+}
 
  /**
   *  a mark-up to list all the available haplotype maps.
