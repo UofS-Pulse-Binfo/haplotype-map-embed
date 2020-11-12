@@ -195,6 +195,14 @@ function haplotypemap_embed_form($form, &$form_state){
     '#description' => 'Filter for specific germplasm and display in haplotype map'
   );
 
+  $form['s2']['default_map']['haplotypemap_canvas'] = array(
+    '#type' => 'markup',
+    '#markup' =>  '
+      <div id="   " data-source=' '></div>
+      <script src="/bundle/hapmap.js"></script>
+      '
+  );
+
   //S2.b filter file for the germpasm user choose then display with haplotype map viewer
   $form['s2']['filtered_map'] = array(
     '#type' => 'fieldset',
