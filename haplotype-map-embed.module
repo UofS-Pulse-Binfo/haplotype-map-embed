@@ -23,6 +23,7 @@ function haplotypembed_menu(){
   //   'access arguments' => array('view haplotype map'),
   //   'type' => MENU_NORMAL_ITEM,
   // );
+
   $items = array();
 
   $items['haplotype-map_embed'] = array(
@@ -104,7 +105,7 @@ function haplotypembed_menu(){
       'name' => 'haplotype-map',
       'vendor url' => 'https://github.com/kiranbandi/haplotype-map',
       'version' => '0.0.1',
-      'download url' => ,'https://github.com/kiranbandi/haplotype-map'
+      'download url' => 'https://github.com/kiranbandi/haplotype-map',
     );
     return $libraries;
   }
@@ -152,7 +153,7 @@ function haplotypemap_embed_form($form, &$form_state){
   );
 
   foreach ($files as $haplotypembed_file_id => $d){
-    $files[$haplotypembed_file_id]['name'] = $d['human_readable_name'];
+    $files[$haplotypembed_file_id]['name'] = l($d['human_readable_name'], '/url/from/menu', ['query' => ['source' => 'filenamewithoutsuffix']]);
     $files[$haplotypembed_file_id]['total_number_germplasm'] = count(explode($d['human_readable_name']));
     $files[$haplotypembed_file_id]['default_germplasm'] = $d['default_germplasm'];
   }
@@ -198,7 +199,7 @@ function haplotypemap_embed_form($form, &$form_state){
   $form['s2']['default_map']['haplotypemap_canvas'] = array(
     '#type' => 'markup',
     '#markup' =>  '
-      <div id="   " data-source=' '></div>
+      <div id="root" data-source=""></div>
       <script src="/bundle/hapmap.js"></script>
       '
   );
@@ -210,14 +211,14 @@ function haplotypemap_embed_form($form, &$form_state){
     '#tree' => TRUE,
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
-    '#description' => 'Filter for specific germplasm and display in haplotype map'
+    '#description' => 'Filter for specific germplasm and display in haplotype map',
   );
 
   $form['s2']['filtered_map']['available_germplasm'] = array(
     '#type' => 'textarea',
     '#title' => 'Germplasm from selected file',
     '#disable' => TRUE,
-    '#description' => 'All germplasm (individuals) in selected file. <strong>Please copy less than 15 germplasm that need to be kept to textarea under.</strong>',
+    '#description' => 'All germplasm (individuals) in selected file. <strong>Please copy less than 15 germplasm (ideally less than 10) that need to be kept to textarea under.</strong>',
     '#rows' => 2,
     );
 
@@ -231,11 +232,10 @@ function haplotypemap_embed_form($form, &$form_state){
     if ((isset($form_state['values']['haplotypembed_file_id'])) or (isset($_GET['haplotypembed_file_id']) AND is_numeric($_GET['haplotypembed_file_id']) )) {
       //update filter
 
-
     }
 
-  return $form;
-}
+    return $form;
+  }
 
  /**
   *  a function list all the available haplotype maps.

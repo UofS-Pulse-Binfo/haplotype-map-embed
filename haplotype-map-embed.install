@@ -16,25 +16,37 @@
        'description' => 'Keeps track of haplotype map files for embeded module haplotype-map',
        'fields' => array(
          'haplotypembed_file_id' => array(
-
+           'description' => 'Primary Key',
+           'type' => 'serial',
+           'not null' => TRUE,
          ),
          'file_path' => array(
-
+           'description' => 'Absolute path to an existing haplotype map file.',
+           'type' => 'text',
+           'not null' => TRUE,
          ),
          'default_file_path' => array(
-
+           'description' => 'Absolute path to an existing default haplotype map file.',
+           'type' => 'text',
+           'not null' => TRUE,
          ),
          'description' => array(
-
+           'description' => 'Free text description of the haplotype map file.',
+           'type' => 'text',
          ),
          'human_readable_name' => array(
-
+           'description' => 'Human-readable name for the haplotype map file.',
+           'type' => 'varchar',
+           'length' => 200,
+           'not null' => TRUE,
          ),
          'all_germplasm' => array(
-
+           'description' => 'Free text includes all germplasm names of the haplotype map file.',
+           'type' => 'text',
          ),
          'default_germplasm' => array(
-
+           'description' => 'Free text includes dafault germplasm names of the haplotype map file.',
+           'type' => 'text',
          ),
        ),
        'primary key' => array('haplotypembed_files_id'),
