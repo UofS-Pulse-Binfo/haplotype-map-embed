@@ -1,6 +1,6 @@
 <?php
+
 /**
- *
  * The main functionality of this module.
  * Embed module haplotype-map to visualize haplotype data in tripal sites.
  *
@@ -8,6 +8,8 @@
  * developed by Venkat Bandi(https://github.com/kiranbandi)
  * the module is available in https://github.com/kiranbandi/haplotype-map
  */
+
+require_once('includes/haplotypembed.embedpage.inc');
 
 /**
  * Implements hook_menu(). 1
@@ -20,7 +22,7 @@ function haplotypembed_menu(){
 
   $items = array();
 
-  $items['haplotype-map_embed'] = array(
+  $items['haplotype-map'] = array(
     'title' => 'Haplotype Maps',
     'description' => 'Embeded haplotype map module for users to view haplotype files.',
     'page callback' => 'drupal_get_form',
@@ -28,8 +30,16 @@ function haplotypembed_menu(){
     'access arguments' => array('view haplotype map'),
   );
 
-  //administration
-  //manage files, list
+  $items['haplotype-map/view'] = array(
+    'title' => 'Haplotype Maps',
+    'description' => 'Embeded haplotype map module for users to view haplotype files.',
+    'page callback' => 'haplotypembed_embed_page',
+    'page arguments' => array(''),
+    'access arguments' => array('view haplotype map'),
+  );
+
+  // administration
+  // manage files, list
   $items['admin/tripal/extension/haplotype-map_embed'] = array(
     'title' => 'Embeded Haplotype map',
     'description' => 'Provides users embeded haplotype maps.',
