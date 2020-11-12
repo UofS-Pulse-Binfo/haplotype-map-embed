@@ -129,24 +129,129 @@ function haplotypembed_menu(){
 function haplotypemap_embed_form($form, &$form_state){
   // check for available dataset, ask user to pick and feed to haplotype-map
   //section 1, ask user to select a file first
-  $maps = page_list_available_maps();
+  $maps = page_list_available_map_files();
+  $form['S1'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'Choose your Haplotype map File.',
+    '#description' => 'The following table contains all the available Haplotype maps. Choose the one you would like to show haplotype map for default germplasm or filter for specific germplasm.',
+    '#prefix' => '<div id="all-haplotypemap-options"><span class="stages stage1">1</span>',
+  );
 
+  $files = page_list_available_map_files();
+  // create table for all files/map
+  $form['files'] = array(
+    '#type' => 'hidden',
+    '#value' => serialize($files),
+    '#serialized' => TRUE,
+  );
+
+  $header = array(
+    'name' => t('Name'),
+    'total_number_germplasm' => t('Number of Germplasm'),
+    'default_germplasm' => t('Default Germplasm'),
+  );
+
+  foreach ($files as $haplotypembed_file_id => $d){
+    $files[$haplotypembed_file_id]['name'] = $d['human_readable_name'];
+    $files[$haplotypembed_file_id]['total_number_germplasm'] = count(explode($d['human_readable_name']));
+    $files[$haplotypembed_file_id]['default_germplasm'] = $d['default_germplasm'];
+  }
+
+  $form['s1']['haplotypembed_file_id'] = array(
+    '#type' => 'tableselect',
+    '#header' => $header,
+    '#options' => $files,
+    '#empty' => t('No Haplotype map available.'),
+    '#multiple' => FALSE,
+    '#ajax' => array(
+      'callback' => 'ajax_haplotypemap_embed_show_description_callback',
+      'wrapper' => 'all-haplotypemap-options',
+      'method' => 'replace',
+      'effect' => 'fade',
+    ),
+  );
+
+  // markup to show file/map description
+
+  // Path to module.
+  $module_path = drupal_get_path('module', 'haplotype-map-embed');
+  // Relative Path to Library.
+  $haplotypemap_embed_lib_path = libraries_get_path('haplotype-map') . '/';
 
   //section 2, give option of using default file or filter for specific germplasm
+  $form['s2'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'Haplotype map for this file.',
+    '#tree' => TRUE,
+    '#prefix' => '<span class="stages stage2">2</span>',
+  );
   //S2.a include haplotype-map using default file
+  $form['s2']['default_map'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'Haplotype map of default germplasm',
+    '#tree' => TRUE,
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#description' => 'Filter for specific germplasm and display in haplotype map'
+  );
 
   //S2.b filter file for the germpasm user choose then display with haplotype map viewer
+  $form['s2']['filtered_map'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'Restrict to specific germplasm',
+    '#tree' => TRUE,
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#description' => 'Filter for specific germplasm and display in haplotype map'
+  );
 
+  $form['s2']['filtered_map']['available_germplasm'] = array(
+    '#type' => 'textarea',
+    '#title' => 'Germplasm from selected file',
+    '#disable' => TRUE,
+    '#description' => 'All germplasm (individuals) in selected file. <strong>Please copy less than 15 germplasm that need to be kept to textarea under.</strong>',
+    '#rows' => 2,
+    );
+
+    $form['s2']['restrict_dataset']['germplasm_select'] = array(
+    '#type' => 'textarea',
+    '#title' => 'Filter for these Germplasm',
+    '#description' => 'Only include these germplasm in haplotype map.',
+    '#rows' => 2,
+    );
+
+    if ((isset($form_state['values']['haplotypembed_file_id'])) or (isset($_GET['haplotypembed_file_id']) AND is_numeric($_GET['haplotypembed_file_id']) )) {
+      //update filter
+
+
+    }
 
   return $form;
 }
 
  /**
-  *  a mark-up to list all the available haplotype maps.
+  *  a function list all the available haplotype maps.
   */
 
-function page_list_available_maps(){
-  $output = '';
+function page_list_available_map_files(){
+  global $user;
 
-  return $output;
+  // Gran the roles and user id of the current user.
+  $uid = $user->uid;
+  $rids = is_array($user->roles) ? array_keys($user->roles) : array();
+
+  // Only grab files that the current user has permission to see.
+  $files = db_query('
+    SELECT f.*
+    FROM {haplotypembed_perm} perm
+    LEFT JOIN {haplotypembed_files} f ON f.haplotypembed_file_id=perm.haplotypembed_file_perm_id
+    WHERE perm.uid=:uid OR perm.rid IN (:rids)
+    ORDER BY human_readable_name ASC',
+    array(':uid' => $uid, ':rids' => $rids))->fetchAllAssoc('haplotypembed_file_id', PDO::FETCH_ASSOC);
+
+  return $files;
+}
+
+function ajax_haplotypemap_embed_show_description_callback($form, $form_state){
+  return array($form['S1'], $form['S2']);
 }
