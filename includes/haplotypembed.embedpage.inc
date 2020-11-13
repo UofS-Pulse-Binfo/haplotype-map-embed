@@ -11,8 +11,9 @@ function haplotypembed_embed_page() {
   $output = '';
 
   $haplotypemap_embed_lib_path = libraries_get_path('haplotype-map') . '/';
-  drupal_add_js($haplotypemap_embed_lib_path . 'dist/bundle/main.bundle.1cd727076111f0e998e1.js');
-  $output .= '<div id="root"></div>';
+  drupal_add_js($haplotypemap_embed_lib_path . 'dist/bundle/main.bundle.haplotype-map.js', 
+    ['group' => JS_LIBRARY, 'scope' => 'footer']);
+  $output .= '<div id="haplotype-map"></div>';
 
   return $output;
 }
