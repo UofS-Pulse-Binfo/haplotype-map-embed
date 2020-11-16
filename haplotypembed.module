@@ -45,7 +45,7 @@ function haplotypembed_menu(){
     'page callback' => 'haplotypemap_embed_admin_list',
     'page arguments' => array(),
     'access arguments' => array('administer tripal'),
-    'file' => 'includes/haplotype-map_embed.admin.inc',
+    'file' => 'includes/haplotypembed.admin.inc',
   );
   // add
   $items['admin/tripal/extension/haplotype-map/add'] = array(
@@ -54,7 +54,7 @@ function haplotypembed_menu(){
     'page callback' => 'drupal_get_form',
     'page arguments' => array('haplotypemap_embed_admin_file_form', 'add'),
     'access arguments' => array('administer tripal'),
-    'file' => 'includes/haplotype-map_embed.admin.inc',
+    'file' => 'includes/haplotypembed.admin.inc',
   );
   // edit
   $items['admin/tripal/extension/haplotype-map/edit'] = array(
@@ -63,7 +63,7 @@ function haplotypembed_menu(){
     'page callback' => 'drupal_get_form',
     'page arguments' => array('haplotypemap_embed_admin_file_form', 'edit'),
     'access arguments' => array('administer tripal'),
-    'file' => 'includes/haplotype-map_embed.admin.inc',
+    'file' => 'includes/haplotypembed.admin.inc',
   );
   // delete
   $items['admin/tripal/extension/haplotype-map/delete'] = array(
@@ -72,30 +72,43 @@ function haplotypembed_menu(){
     'page callback' => 'drupal_get_form',
     'page arguments' => array('haplotypemap_embed_admin_file_form', 'delete'),
     'access arguments' => array('administer tripal'),
-    'file' => 'includes/haplotype-map_embed.admin.inc',
+    'file' => 'includes/haplotypembed.admin.inc',
+  );
+
+  // manage access
+  // -- Add
+  $items['admin/tripal/extension/haplotype-map/access'] = array(
+    'title' => 'Haplotype Map File Permissions',
+    'description' => 'Handle permissions for a Haplotype Map File.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('haplotypemap_embed_admin_file_perm_form', 5),
+    'access arguments' => array('administer tripal'),
+    'file' => 'includes/haplotypembed.admin.inc',
+  );
+
+  // -- Remove (no confirm)
+  $items['admin/tripal/extension/haplotype-map/access/%/%/%'] = array(
+    'title' => 'Remove Haplotype Map File Permissions',
+    'description' => 'Handle permissions for a Haplotype Map file.',
+    'page callback' => 'haplotypembed_admin_file_perm_remove_callback',
+    'page arguments' => array(5,6,7),
+    'access arguments' => array('administer tripal'),
+    'file' => 'includes/haplotypembed.admin.inc',
+  );
+
+  // AUTOCOMPLETE: User
+  // Note: We can't just use user/autocomplete, user_autocomplete() because it assumes
+  // you are typing the username in order rather then simply finding the substring.
+  $items['autocomplete/haplotype-map/user'] = array(
+    'title' => 'Haplotype Map: Autocomplete',
+    'page callback' => 'haplotypembed_user_autocomplete',
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('administer tripal'),
   );
 
 
-  // manage access
-
   return $items;
 }
-
-
-
-// /**
-//  * Implements hook_permission().2
-//  */
-// function haplotypembed_permission(){
-//   return array(
-//     'view haplotype map' => array(
-//       'title' => t('Access Public Haplotype maps.'),
-//     ),
-//     'view private haplotype map' => array(
-//       'title' => t('Access Private Haplotype maps.'),
-//     ),
-//   );
-// }
 
 
 /**
@@ -260,6 +273,11 @@ function haplotypemap_embed_form($form, &$form_state){
 
   }
 
+  $form['s2']['filtered_map']['submit'] = array(
+  '#type' => 'submit',
+  '#value' => 'Filter',
+);
+
   return $form;
 }
 
@@ -287,4 +305,19 @@ function page_list_available_map_files(){
 
 function ajax_haplotypemap_embed_show_description_callback($form, $form_state){
   return array($form['s1'], $form['s2']);
+}
+
+/**
+ * Autocomplete: Usernames Access permissions.
+ */
+function haplotypembed_user_autocomplete($string = '') {
+  $matches = array();
+  if ($string) {
+    $result = db_query('SELECT name FROM {users} WHERE LOWER(name) ~ LOWER(:string)', array(':string' => $string));
+    foreach ($result as $user) {
+      $matches[$user->name] = check_plain($user->name);
+    }
+  }
+
+  drupal_json_output($matches);
 }
