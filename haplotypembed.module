@@ -39,7 +39,7 @@ function haplotypembed_menu(){
 
   // administration
   // manage files, list
-  $items['admin/tripal/extension/haplotype-map_embed'] = array(
+  $items['admin/tripal/extension/haplotype-map'] = array(
     'title' => 'Embeded Haplotype map',
     'description' => 'Provides users embeded haplotype maps.',
     'page callback' => 'haplotypemap_embed_admin_list',
@@ -48,7 +48,7 @@ function haplotypembed_menu(){
     'file' => 'includes/haplotype-map_embed.admin.inc',
   );
   // add
-  $items['admin/tripal/extension/haplotype-map_embed/add'] = array(
+  $items['admin/tripal/extension/haplotype-map/add'] = array(
     'title' => 'Add Haplotype map',
     'description' => 'Add a haplotype map in list.',
     'page callback' => 'drupal_get_form',
@@ -57,7 +57,7 @@ function haplotypembed_menu(){
     'file' => 'includes/haplotype-map_embed.admin.inc',
   );
   // edit
-  $items['admin/tripal/extension/haplotype-map_embed/edit'] = array(
+  $items['admin/tripal/extension/haplotype-map/edit'] = array(
     'title' => 'Edit Haplotype map',
     'description' => 'Edit a haplotype map in list.',
     'page callback' => 'drupal_get_form',
@@ -66,7 +66,7 @@ function haplotypembed_menu(){
     'file' => 'includes/haplotype-map_embed.admin.inc',
   );
   // delete
-  $items['admin/tripal/extension/haplotype-map_embed/delete'] = array(
+  $items['admin/tripal/extension/haplotype-map/delete'] = array(
     'title' => 'Delete Haplotype map',
     'description' => 'Delete a haplotype map in list.',
     'page callback' => 'drupal_get_form',
@@ -83,19 +83,19 @@ function haplotypembed_menu(){
 
 
 
-/**
- * Implements hook_permission().2
- */
-function haplotypembed_permission(){
-  return array(
-    'view haplotype map' => array(
-      'title' => t('Access Public Haplotype maps.'),
-    ),
-    'view private haplotype map' => array(
-      'title' => t('Access Private Haplotype maps.'),
-    ),
-  );
-}
+// /**
+//  * Implements hook_permission().2
+//  */
+// function haplotypembed_permission(){
+//   return array(
+//     'view haplotype map' => array(
+//       'title' => t('Access Public Haplotype maps.'),
+//     ),
+//     'view private haplotype map' => array(
+//       'title' => t('Access Private Haplotype maps.'),
+//     ),
+//   );
+// }
 
 
 /**
