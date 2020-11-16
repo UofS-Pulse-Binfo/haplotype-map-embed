@@ -1,5 +1,4 @@
 <?php
-
 /**
  * The main functionality of this module.
  * Embed module haplotype-map to visualize haplotype data in tripal sites.
@@ -114,28 +113,23 @@ function haplotypembed_libraries_info(){
   return $libraries;
 }
 
-// <html lang="en">
-//   <head><meta charset="utf-8">
-//   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-//   <meta name="viewport" content="width=device-width,initial-scale=1">
-//   <meta name="description" content="Haplotype Visualization Browser developed at University of Saskatchewan">
-//   <meta name="author" content="kiranbandi">
-//   <title>SNPs Haplotype Visualization</title>
-//   <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,400italic" rel="stylesheet"></head>
-//     <body>
-//       <div id="root"></div>
-//       <script src="bundle/main.bundle.1cd727076111f0e998e1.js"></script>
-//     </body>
-// </html>
 
 /**
  * Implements hook_form().
  */
 function haplotypemap_embed_form($form, &$form_state){
   // check for available dataset, ask user to pick and feed to haplotype-map
+
+  // Path to module.
+  $module_path = drupal_get_path('module', 'haplotypembed');
+  // Relative Path to Library.
+  $haplotypemap_embed_lib_path = libraries_get_path('haplotype-map') . '/';
+
   //section 1, ask user to select a file first
+
   $maps = page_list_available_map_files();
-  $form['S1'] = array(
+
+  $form['s1'] = array(
     '#type' => 'fieldset',
     '#title' => 'Choose your Haplotype map File.',
     '#description' => 'The following table contains all the available Haplotype maps. Choose the one you would like to show haplotype map for default germplasm or filter for specific germplasm.',
@@ -153,12 +147,12 @@ function haplotypemap_embed_form($form, &$form_state){
   $header = array(
     'name' => t('Name'),
     'total_number_germplasm' => t('Number of Germplasm'),
-    'default_germplasm' => t('Default Germplasm'),
+    'default_germplasm' => t('Germplasm in Default File'),
   );
 
   foreach ($files as $haplotypembed_file_id => $d){
-    $files[$haplotypembed_file_id]['name'] = l($d['human_readable_name'], '/url/from/menu', ['query' => ['source' => 'filenamewithoutsuffix']]);
-    $files[$haplotypembed_file_id]['total_number_germplasm'] = count(explode($d['human_readable_name']));
+    $files[$haplotypembed_file_id]['name'] = l($d['human_readable_name'], '/haplotype-map/view', ['query' => ['source' => pathinfo(basename($d['file_path']), PATHINFO_FILENAME)] ]);
+    $files[$haplotypembed_file_id]['total_number_germplasm'] = count(explode($d['all_germplasm']));
     $files[$haplotypembed_file_id]['default_germplasm'] = $d['default_germplasm'];
   }
 
@@ -177,11 +171,31 @@ function haplotypemap_embed_form($form, &$form_state){
   );
 
   // markup to show file/map description
+  if (isset($_GET['haplotypembed_file_id']) AND is_numeric($_GET['haplotypembed_file_id'])) {
+    $form['s1']['haplotypembed_file_id']['#default_value'] = $_GET['haplotypembed_file_id'];
+  }
+  if (isset($form_state['values']['haplotypembed_file_id'])) {
+    $form['s1']['haplotypembed_file_id']['#default_value'] = $form_state['values']['haplotypembed_file_id'];
+  }
 
-  // Path to module.
-  $module_path = drupal_get_path('module', 'haplotypembed');
-  // Relative Path to Library.
-  $haplotypemap_embed_lib_path = libraries_get_path('haplotype-map') . '/';
+  $markup_map_description = '';
+  if (!empty($form['s1']['haplotypembed_file_id']['#default_value'])) {
+    $current_map_file = $files[  $form['s1']['haplotypembed_file_id']['#default_value']  ];
+    if (!empty($current_map_file['description'])) {
+      $descrip_markup = '<br /><p><strong>More information on <em>'.$current_map_file['human_readable_name'].'</em>:</strong> ' . $current_map_file['description'] . '</p>';
+    }
+    if (!empty($current_map_file['all_germplasm'])) {
+      $all_germplasm_names = $current_map_file['all_germplasm'];
+    }
+    if (!empty($current_map_file['default_germplasm'])) {
+      $default_germplasm_names = $current_map_file['default_germplasm'];
+    }
+  }
+  $form['s1']['file_description'] = array(
+    '#type' => 'markup',
+    '#markup' => $markup_map_description,
+  );
+
 
   //section 2, give option of using default file or filter for specific germplasm
   $form['s2'] = array(
@@ -194,19 +208,18 @@ function haplotypemap_embed_form($form, &$form_state){
   $form['s2']['default_map'] = array(
     '#type' => 'fieldset',
     '#title' => 'Haplotype map of default germplasm',
-    '#tree' => TRUE,
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
-    '#description' => 'Filter for specific germplasm and display in haplotype map'
+    '#description' => 'The haplotype map for default germplasm',
   );
 
-  $form['s2']['default_map']['haplotypemap_canvas'] = array(
-    '#type' => 'markup',
-    '#markup' =>  '
-      <div id="root" data-source=""></div>
-      <script src="/bundle/hapmap.js"></script>
-      '
-  );
+  // $form['s2']['default_map']['haplotypemap_canvas'] = array(
+  //   '#type' => 'markup',
+  //   '#markup' =>  '
+  //     <div id="root" data-source=""></div>
+  //     <script src="/bundle/hapmap.js"></script>
+  //     '
+  // );
 
   //S2.b filter file for the germpasm user choose then display with haplotype map viewer
   $form['s2']['filtered_map'] = array(
@@ -222,24 +235,33 @@ function haplotypemap_embed_form($form, &$form_state){
     '#type' => 'textarea',
     '#title' => 'Germplasm from selected file',
     '#disable' => TRUE,
-    '#description' => 'All germplasm (individuals) in selected file. <strong>Please copy less than 15 germplasm (ideally less than 10) that need to be kept to textarea under.</strong>',
+    '#description' => 'All germplasm (individuals) in selected file.',
     '#rows' => 2,
     );
 
-    $form['s2']['restrict_dataset']['germplasm_select'] = array(
+  $form['s2']['filtered_map']['germplasm_select'] = array(
     '#type' => 'textarea',
     '#title' => 'Filter for these Germplasm',
-    '#description' => 'Only include these germplasm in haplotype map.',
+    '#description' => 'Only include these germplasm in haplotype map. <strong>Please copy less than 15 germplasm (ideally less than 10) that need to be kept to textarea under.</strong>',
     '#rows' => 2,
-    );
+  );
 
-    if ((isset($form_state['values']['haplotypembed_file_id'])) or (isset($_GET['haplotypembed_file_id']) AND is_numeric($_GET['haplotypembed_file_id']) )) {
-      //update filter
+  if ((isset($form_state['values']['haplotypembed_file_id'])) or (isset($_GET['haplotypembed_file_id']) AND is_numeric($_GET['haplotypembed_file_id']) )) {
+    //update filter
+    $form['s2']['default_map']['#collapsed'] = FALSE;
+    $form['s2']['default_map']['#description'] = 'Please check ' . l($current_map_file['human_readable_name'], '/haplotype-map/view', ['query' => ['source' => pathinfo(basename($current_map_file['file_path']), PATHINFO_FILENAME)] ]) . ' for haplotype map of default germplasm.';
 
-    }
 
-    return $form;
+    $form['s2']['filtered_map']['#collapsed'] = FALSE;
+    $form['s2']['filtered_map']['available_germplasm']['#rows'] = 5;
+    $form['s2']['filtered_map']['available_germplasm']['#disable'] = FALSE;
+    $form['s2']['filtered_map']['germplasm_select'][['#rows']] = 5;
+    $form['s2']['filtered_map']['available_germplasm']['#value'] = $all_germplasm_names;
+
   }
+
+  return $form;
+}
 
  /**
   *  a function list all the available haplotype maps.
