@@ -11,7 +11,7 @@
   function haplotypemap_embed_admin_list() {
      $output = '';
 
-     $output .= '<p>This module provides a form for users to utilize haplotype datasite visulation module haplotype map.:</p>';
+     $output .= '<p>This module provides a form for users to utilize haplotype file visulation module haplotype map.:</p>';
 
      $output .= l('Add', 'admin/tripal/extension/haplotype-map/add');
 
@@ -26,8 +26,8 @@
 
        $table['rows'][] = array(
          'name' => $r->human_readable_name,
-         'total_number_germplasm' => '100',
-         'file' => $r->file_path,
+         'total_number_germplasm' => count(explode("\n", $r->all_germplasm)),
+         'file' => join(";", explode("\n", $r->default_germplasm)),
          l('edit', 'admin/tripal/extension/haplotype-map/edit/'.$r->haplotypembed_file_id) .' | '
            . l('delete', 'admin/tripal/extension/haplotype-map/delete/'.$r->haplotypembed_file_id) .' | '
            . l('access', 'admin/tripal/extension/haplotype-map/access/'.$r->haplotypembed_file_id)
@@ -99,16 +99,16 @@
       '#default_value' => (isset($obj->human_readable_name)) ? $obj->human_readable_name : '',
     );
 
-    $from['file'] = array(
+    $form['file'] = array(
       '#type' => 'textfield',
-      '#title' => 'Haplotype map file (absolute path)',
+      '#title' => 'Haplotype map file',
       '#description' => 'The absolute path to your haplotype map file. This file must already exist.',
       '#default_value' => (isset($obj->file_path)) ? $obj->file_path : '',
     );
 
-    $from['default_file'] = array(
+    $form['default_file'] = array(
       '#type' => 'textfield',
-      '#title' => 'Default haplotype map file (filtered, only default germplasm, absolute path)',
+      '#title' => 'Default haplotype map file ',
       '#description' => 'The absolute path to your filtred default hapletype map file. This file must already exist.',
       '#default_value' => (isset($obj->default_file_path)) ? $obj->default_file_path : '',
     );
@@ -154,8 +154,8 @@
     if ($form_state['values']['op'] == 'Delete') {
       db_query('DELETE FROM {haplotypembed_files} WHERE haplotypembed_file_id=:id',
         array(':id' => $form_state['values']['haplotypembed_file_id']));
-      // db_query('DELETE FROM {haplotypembed_perm} WHERE haplotypembed_file_id=:id',
-      //   array(':id' => $form_state['values']['haplotypembed_file_id']));
+      db_query('DELETE FROM {haplotypembed_perm} WHERE haplotypembed_file_id=:id',
+        array(':id' => $form_state['values']['haplotypembed_file_id']));
       drupal_set_message('Successfully deleted <em>'.$form_state['values']['name'].'</em>');
     }
     else {
@@ -163,14 +163,14 @@
         'file_path' => $form_state['values']['file'],
         'default_file_path' => $form_state['values']['default_file'],
         'description' => str_replace(',','', $form_state['values']['description']),
-        'human_readable_name' => $form_state['values']['assembly'],
-        'all_germplasm' => $form_state['values']['name'],
+        'human_readable_name' => $form_state['values']['name'],
+        'all_germplasm' => $form_state['values']['all_germplasm'],
         'default_germplasm' => $form_state['values']['default_germplasm'],
       );
 
       if ($form_state['values']['op'] == 'Add') {
         drupal_write_record('haplotypembed_files', $record);
-        $haplotypemap_embed_lib_path = libraries_get_path('haplotype-map').'/dist/data';
+        $haplotypemap_embed_lib_path = libraries_get_path('haplotype-map', array('absolute' => TRUE)).'/dist/data';
         haplotypemap_create_symlink_when_add_file($form_state['values']['file'], $haplotypemap_embed_lib_path);
         haplotypemap_create_symlink_when_add_file($form_state['values']['default_file'], $haplotypemap_embed_lib_path);
       }
@@ -414,8 +414,10 @@ function haplotypembed_admin_form_perm_table($vars) {
 
 // create symlink in library/haplotype-map, so it can be read
 function haplotypemap_create_symlink_when_add_file($source, $destination){
-  file_prepare_directory($destination, FILE_CREATE_DIRECTORY);
+  dpm($source, '$source');
+  dpm($destination, '$destination');
   $destination_symlink = $destination.'/'.basename($source);
+  file_prepare_directory($destination, FILE_CREATE_DIRECTORY);
   if (file_exists($destination_symlink)){
     return TRUE;
   }else{
