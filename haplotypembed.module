@@ -163,7 +163,7 @@ function haplotypemap_embed_form($form, &$form_state){
   );
 
   foreach ($files as $haplotypembed_file_id => $d){
-    $files[$haplotypembed_file_id]['name'] = l($d['human_readable_name'], '/haplotype-map/view', ['query' => ['source' => pathinfo(basename($d['file_path']), PATHINFO_FILENAME)] ]);
+    $files[$haplotypembed_file_id]['name'] = l($d['human_readable_name'], '/haplotype-map/view', ['query' => ['source' => pathinfo(basename($d['default_file_path']), PATHINFO_FILENAME)] ]);
     $files[$haplotypembed_file_id]['total_number_germplasm'] = count(explode("\n", $d['all_germplasm']));
     $files[$haplotypembed_file_id]['default_germplasm'] = $d['default_germplasm'];
   }
@@ -261,7 +261,7 @@ function haplotypemap_embed_form($form, &$form_state){
   if ((isset($form_state['values']['haplotypembed_file_id'])) or (isset($_GET['haplotypembed_file_id']) AND is_numeric($_GET['haplotypembed_file_id']) )) {
     //update filter
     $form['s2']['default_map']['#collapsed'] = FALSE;
-    $form['s2']['default_map']['#description'] = 'Please check the ' . l($current_map_file['human_readable_name'].' Haplotype Map ', '/haplotype-map/view', ['query' => ['source' => pathinfo(basename($current_map_file['file_path']), PATHINFO_FILENAME)] ]) . 'for default germplasm.';
+    $form['s2']['default_map']['#description'] = 'Please check the ' . l($current_map_file['human_readable_name'].' Haplotype Map ', '/haplotype-map/view', ['query' => ['source' => pathinfo(basename($current_map_file['default_file_path']), PATHINFO_FILENAME)] ]) . 'for default germplasm.';
 
 
     $form['s2']['filtered_map']['#collapsed'] = FALSE;
