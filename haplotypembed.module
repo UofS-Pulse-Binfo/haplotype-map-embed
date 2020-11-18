@@ -157,7 +157,7 @@ function haplotypemap_embed_form($form, &$form_state){
   );
 
   $header = array(
-    'name' => t('Name'),
+    'name' => t('Name'),0
     'total_number_germplasm' => t('Number of Germplasm'),
     'default_germplasm' => t('Germplasm in Default File'),
   );
@@ -302,6 +302,16 @@ function page_list_available_map_files(){
   return $files;
 }
 
+/**
+ *  a function list all the available haplotype maps.
+ */
+function get_one_haplotype_map_file($haplotypembed_file_id){
+  $file = db_query('SELECT * FROM {haplotypembed_files} WHERE haplotypembed_file_id=:id',
+    array(':id' => $haplotypembed_file_id))->fetchObject();
+
+  return $file;
+}
+
 function ajax_haplotypemap_embed_show_description_callback($form, $form_state){
   return array($form['s1'], $form['s2']);
 }
@@ -319,4 +329,12 @@ function haplotypembed_user_autocomplete($string = '') {
   }
 
   drupal_json_output($matches);
+}
+
+/**
+ * hapmap filter by germplasm
+ */
+function hapmap_filter_by_germplasm($haplotypembed_file_id, $in_germplasm_wanted, $out_path){
+  $file_need_filter =
+
 }
