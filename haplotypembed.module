@@ -140,7 +140,6 @@ function haplotypemap_embed_form($form, &$form_state){
 
   //section 1, ask user to select a file first
 
-  $maps = page_list_available_map_files();
   $form['s1'] = array(
     '#type' => 'fieldset',
     '#title' => 'Choose your Haplotype map File.',
@@ -280,6 +279,23 @@ function haplotypemap_embed_form($form, &$form_state){
   return $form;
 }
 
+/**
+ * validate form
+ */
+function haplotypemap_embed_form_validate($form, &$form_state){
+  // check if user input germplasm is less than 15
+
+  // check if user input germplasm all have matches
+
+}
+
+/**
+ * submit to filte and redirect to haplotype map
+ */
+function haplotypemap_embed_form_submit($form, &$form_state){
+
+}
+
  /**
   *  a function list all the available haplotype maps.
   */
@@ -335,6 +351,36 @@ function haplotypembed_user_autocomplete($string = '') {
  * hapmap filter by germplasm
  */
 function hapmap_filter_by_germplasm($haplotypembed_file_id, $in_germplasm_wanted, $out_path){
-  $file_need_filter =
+  $file_need_filter = get_one_haplotype_map_file($haplotypembed_file_id);
+
+  $out_hapmap_filename = $out_path . basename($file_need_filter['file_path']);
+  //write into path using same name from inpufile
+  $handle_out = fopen($out_hapmap_filename,'w') or die ("\nCannot create file: $out_hapmap_filename .\n");
+
+  print 'Haplotype map ' . $file_need_filter->human_readable_name . 'will be filtered' . "\n";
+
+  // trim each germplasm
+  $wanted_germplasm = explode("\n", $in_germplasm_wanted);
+  for($i = 0; $i < count($wanted_germplasm); $i++){
+    $wanted_germplasm[$i] = trim($wanted_germplasm[$i]);
+    //$wanted_germplasm_in_order[ $wanted_germplasm[$i] ] = $wanted_germplasm[$i];
+  }
+
+  // read the file, print into new file in order of user selected germplasm
+  foreach (new SplFileObject($in_vcf_filename) as $line) {
+    $line = trim($line);
+
+    //
+    if (preg_match('/^rs#/', $line)) {
+      // determine the germplasm column number in hapmap file first
+      $header = explode("\t", $line);
+
+    }
+
+  }
+  // save file in temp, create soft link to $out_path, also make it unique
+
+
+
 
 }
