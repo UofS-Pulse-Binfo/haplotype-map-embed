@@ -37,6 +37,15 @@ function haplotypembed_menu(){
     'access arguments' => array('view haplotype map'),
   );
 
+  // $items['haplotype-map/filter'] = array(
+  //   'title' => 'Hapmap File Filter',
+  //   'description' => 'Filter hapmap files for user selected germplasm, then view in Haplotype Maps.',
+  //   'page callback' => 'trpdownload_download_page',
+  //   'page arguments' => array(''),
+  //   'access arguments' => array('access content'),
+  //   'type' => MENU_CALLBACK,
+  // );
+
   // administration
   // manage files, list
   $items['admin/tripal/extension/haplotype-map'] = array(
@@ -44,7 +53,13 @@ function haplotypembed_menu(){
     'description' => 'Provides users embeded haplotype maps.',
     'page callback' => 'haplotypemap_embed_admin_list',
     'page arguments' => array(),
-    'access arguments' => array('administer tripal'),
+    'access arguments' => array('administer tripal'  $items['filter_vcf/Bgzipped'] = array(
+    'title' => 'Download Filtered VCF: Block Compression/Decompression (bgzipped) Format',
+    'page callback' => 'trpdownload_download_page',
+    'page arguments' => array('vcf_filter_bgzipped'),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );),
     'file' => 'includes/haplotypembed.admin.inc',
   );
   // add
@@ -224,13 +239,6 @@ function haplotypemap_embed_form($form, &$form_state){
     '#description' => 'The haplotype map for default germplasm',
   );
 
-  // $form['s2']['default_map']['haplotypemap_canvas'] = array(
-  //   '#type' => 'markup',
-  //   '#markup' =>  '
-  //     <div id="root" data-source=""></div>
-  //     <script src="/bundle/hapmap.js"></script>
-  //     '
-  // );
 
   //S2.b filter file for the germpasm user choose then display with haplotype map viewer
   $form['s2']['filtered_map'] = array(
@@ -283,10 +291,30 @@ function haplotypemap_embed_form($form, &$form_state){
  * validate form
  */
 function haplotypemap_embed_form_validate($form, &$form_state){
-  // check if user input germplasm is less than 15
+  if (empty($form_state['values']['haplotypembed_file_id'])) {
+    form_set_error('haplotypembed_file_id', 'You must choose a Haplotype Map file.');
+  }
 
-  // check if user input germplasm all have matches
-
+  $all_germplasm_names = explode("\n", $form_state['values']['s2']['filtered_map']['available_germplasm']);
+  if ($form_state['values']['s2']['filtered_map']['germplasm_select'] == '') {
+    form_set_error('s2][filtered_map', 'You must provide germplasm name for filter');
+  }
+  else{
+    // check if user input germplasm is less than 15
+    $user_input_germplasm = explode("\n",$form_state['values']['s2']['filtered_map']['germplasm_select']);
+    if(count($user_input_germplasm) > 15){
+      form_set_error('s2][filtered_map', 'Please choose less than 15 germplasm.');
+    }
+    else{
+      foreach($user_input_germplasm as &$g){
+        // check if user input germplasm all have matches
+        if(in_array($g, $all_germplasm_names) == FALSE){
+          form_set_error('s2][filtered_map', 'Please double check input germplams names, which may not match to provided.');
+          break;
+        }
+      }
+    }
+  }
 }
 
 /**
@@ -345,42 +373,4 @@ function haplotypembed_user_autocomplete($string = '') {
   }
 
   drupal_json_output($matches);
-}
-
-/**
- * hapmap filter by germplasm
- */
-function hapmap_filter_by_germplasm($haplotypembed_file_id, $in_germplasm_wanted, $out_path){
-  $file_need_filter = get_one_haplotype_map_file($haplotypembed_file_id);
-
-  $out_hapmap_filename = $out_path . basename($file_need_filter['file_path']);
-  //write into path using same name from inpufile
-  $handle_out = fopen($out_hapmap_filename,'w') or die ("\nCannot create file: $out_hapmap_filename .\n");
-
-  print 'Haplotype map ' . $file_need_filter->human_readable_name . 'will be filtered' . "\n";
-
-  // trim each germplasm
-  $wanted_germplasm = explode("\n", $in_germplasm_wanted);
-  for($i = 0; $i < count($wanted_germplasm); $i++){
-    $wanted_germplasm[$i] = trim($wanted_germplasm[$i]);
-    //$wanted_germplasm_in_order[ $wanted_germplasm[$i] ] = $wanted_germplasm[$i];
-  }
-
-  // read the file, print into new file in order of user selected germplasm
-  foreach (new SplFileObject($in_vcf_filename) as $line) {
-    $line = trim($line);
-
-    //
-    if (preg_match('/^rs#/', $line)) {
-      // determine the germplasm column number in hapmap file first
-      $header = explode("\t", $line);
-
-    }
-
-  }
-  // save file in temp, create soft link to $out_path, also make it unique
-
-
-
-
 }
