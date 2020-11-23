@@ -37,14 +37,14 @@ function haplotypembed_menu(){
     'access arguments' => array('view haplotype map'),
   );
 
-  // $items['haplotype-map/filter'] = array(
-  //   'title' => 'Hapmap File Filter',
-  //   'description' => 'Filter hapmap files for user selected germplasm, then view in Haplotype Maps.',
-  //   'page callback' => 'trpdownload_download_page',
-  //   'page arguments' => array(''),
-  //   'access arguments' => array('access content'),
-  //   'type' => MENU_CALLBACK,
-  // );
+  $items['haplotype-map/filter'] = array(
+    'title' => 'Hapmap File Filter',
+    'description' => 'Filter hapmap files for user selected germplasm, then view in Haplotype Maps.',
+    'page callback' => 'trpdownload_download_page',
+    'page arguments' => array('haplotypembed_filter'),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
 
   // administration
   // manage files, list
@@ -53,13 +53,7 @@ function haplotypembed_menu(){
     'description' => 'Provides users embeded haplotype maps.',
     'page callback' => 'haplotypemap_embed_admin_list',
     'page arguments' => array(),
-    'access arguments' => array('administer tripal'  $items['filter_vcf/Bgzipped'] = array(
-    'title' => 'Download Filtered VCF: Block Compression/Decompression (bgzipped) Format',
-    'page callback' => 'trpdownload_download_page',
-    'page arguments' => array('vcf_filter_bgzipped'),
-    'access arguments' => array('access content'),
-    'type' => MENU_CALLBACK,
-  );),
+    'access arguments' => array('administer tripal'),
     'file' => 'includes/haplotypembed.admin.inc',
   );
   // add
@@ -171,7 +165,7 @@ function haplotypemap_embed_form($form, &$form_state){
   );
 
   $header = array(
-    'name' => t('Name'),0
+    'name' => t('Name'),
     'total_number_germplasm' => t('Number of Germplasm'),
     'default_germplasm' => t('Germplasm in Default File'),
   );
@@ -209,12 +203,6 @@ function haplotypemap_embed_form($form, &$form_state){
     $current_map_file = $files[  $form['s1']['haplotypembed_file_id']['#default_value']  ];
     if (!empty($current_map_file['description'])) {
       $markup_map_description = '<br /><p><strong>More information on <em>'.$current_map_file['human_readable_name'].'</em>:</strong> ' . $current_map_file['description'] . '</p>';
-    }
-    if (!empty($current_map_file['all_germplasm'])) {
-      $all_germplasm_names = $current_map_file['all_germplasm'];
-    }
-    if (!empty($current_map_file['default_germplasm'])) {
-      $default_germplasm_names = $current_map_file['default_germplasm'];
     }
   }
   $form['s1']['file_description'] = array(
@@ -258,6 +246,16 @@ function haplotypemap_embed_form($form, &$form_state){
     '#rows' => 2,
     );
 
+  if (!empty($form['s1']['haplotypembed_file_id']['#default_value'])) {
+    $current_map_file = $files[  $form['s1']['haplotypembed_file_id']['#default_value']  ];
+    if (!empty($current_map_file['all_germplasm'])) {
+      $all_germplasm_names = $current_map_file['all_germplasm'];
+    }
+    if (!empty($current_map_file['default_germplasm'])) {
+      $default_germplasm_names = $current_map_file['default_germplasm'];
+    }
+  }
+
   $form['s2']['filtered_map']['germplasm_select'] = array(
     '#type' => 'textarea',
     '#title' => 'Filter for these Germplasm',
@@ -270,20 +268,21 @@ function haplotypemap_embed_form($form, &$form_state){
     $form['s2']['default_map']['#collapsed'] = FALSE;
     $form['s2']['default_map']['#description'] = 'Please check the ' . l($current_map_file['human_readable_name'].' Haplotype Map ', '/haplotype-map/view', ['query' => ['source' => pathinfo(basename($current_map_file['default_file_path']), PATHINFO_FILENAME)] ]) . 'for default germplasm.';
 
-
     $form['s2']['filtered_map']['#collapsed'] = FALSE;
     $form['s2']['filtered_map']['available_germplasm']['#rows'] = 5;
     $form['s2']['filtered_map']['available_germplasm']['#disable'] = FALSE;
     $form['s2']['filtered_map']['germplasm_select'][['#rows']] = 5;
     $form['s2']['filtered_map']['available_germplasm']['#value'] = $all_germplasm_names;
-
   }
 
   $form['s2']['filtered_map']['submit'] = array(
     '#type' => 'submit',
+    '#executes_submit_callback' => TRUE,
+    '#button_type' => 'primary',
     '#value' => 'Filter',
   );
 
+  dpm ($form, '$form in form');
   return $form;
 }
 
@@ -291,12 +290,13 @@ function haplotypemap_embed_form($form, &$form_state){
  * validate form
  */
 function haplotypemap_embed_form_validate($form, &$form_state){
+  //dpm($form_state, '$form_state in haplotypemap_embed_form_validate');
   if (empty($form_state['values']['haplotypembed_file_id'])) {
     form_set_error('haplotypembed_file_id', 'You must choose a Haplotype Map file.');
   }
 
   $all_germplasm_names = explode("\n", $form_state['values']['s2']['filtered_map']['available_germplasm']);
-  if ($form_state['values']['s2']['filtered_map']['germplasm_select'] == '') {
+  if (empty($form_state['values']['s2']['filtered_map']['germplasm_select'])) {
     form_set_error('s2][filtered_map', 'You must provide germplasm name for filter');
   }
   else{
@@ -321,6 +321,21 @@ function haplotypemap_embed_form_validate($form, &$form_state){
  * submit to filte and redirect to haplotype map
  */
 function haplotypemap_embed_form_submit($form, &$form_state){
+  $form_state['rebuild'] = FALSE;
+
+  $q = $form_state['values']['s2'];
+  $q['haplotypembed_file_id'] = $form_state['values']['haplotypembed_file_id'];
+
+  $url = array(
+    'filter' => '/haplotype-map/filter',
+  );
+
+  $form_state['redirect'] = array(
+    '/haplotype-map/filter',
+    array(
+      'query' => $q
+    ),
+  );
 
 }
 

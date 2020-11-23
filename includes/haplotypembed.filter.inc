@@ -1,12 +1,63 @@
 <?php
 
+/**
+ * Implements hook_register_trpdownload_type().
+ */
+function haplotypembed_register_trpdownload_type(){
+  $types = array();
+
+  $types['haplotypembed_filter'] = array(
+    'type_name' => 'VCF Filter',
+    'format' => 'A/B Biparental Format',
+    'functions' => array(
+      'generate_file' => 'haplotypembed_filter_generate_file',
+      'summarize' => 'haplotypembed_filter_summary',
+    ),
+  );
+
+  return $types;
+}
+
+/**
+ * Generates the file.
+ *
+ * @param $variables
+ *   An associative array of parameters including:
+ *     - q: all the query paramters.
+ *     - site_safe_name: a sanitized version of your site name for use in variables & filenames.
+ *     - type_info: an array of info for the download type.
+ *     - suffix: the file format suffix.
+ *     - filename: the filename of the file to generate not including path.
+ *     - fullpath: the full path where the file should be generated.
+ *     - format_name: a human-readable description of the format.
+ * @param $job_id
+ *   The ID of the tripal job executing this function ;-).
+ */
+function haplotypembed_filter_generate_file($variables, $job_id = NULL){
+  dpm($variables, '$variables in haplotypembed_filter_generate_file ');
+}
+
+/**
+ * Summarize the current download for filtered hapmap file.
+ *
+ * @param $vars
+ *   An array of variables available to this function. Including:
+ *     - ['download_args']['q']: all the arguments in the path passed to the Tripal Download API
+ *     - ['download_args']['safe_site_name']: a sanitized version of the site-name for use in filenames
+ *     - ['download_args']['type_info']: what you defined in hook_register_trpdownload_type() for the current download type
+ * @return
+ *   A string representing the summary (can include html).
+ */
+function haplotypembed_filter_summary($vars){
 
 
+}
 
 /**
  * hapmap filter by germplasm
  */
 function hapmap_filter_by_germplasm($haplotypembed_file_id, $in_germplasm_wanted, $out_path){
+
   $file_need_filter = get_one_haplotype_map_file($haplotypembed_file_id);
 
   $out_hapmap_filename = $out_path . basename($file_need_filter['file_path']);
