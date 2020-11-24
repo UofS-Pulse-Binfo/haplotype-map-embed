@@ -189,8 +189,7 @@ function haplotypemap_embed_form($form, &$form_state){
       'effect' => 'fade',
     ),
   );
-
-  // markup to show file/map description
+  dpm($_GET, '$_GET in form');
   if (isset($_GET['haplotypembed_file_id']) AND is_numeric($_GET['haplotypembed_file_id'])) {
     $form['s1']['haplotypembed_file_id']['#default_value'] = $_GET['haplotypembed_file_id'];
   }
@@ -226,7 +225,6 @@ function haplotypemap_embed_form($form, &$form_state){
     '#collapsed' => TRUE,
     '#description' => 'The haplotype map for default germplasm',
   );
-
 
   //S2.b filter file for the germpasm user choose then display with haplotype map viewer
   $form['s2']['filtered_map'] = array(
@@ -272,7 +270,10 @@ function haplotypemap_embed_form($form, &$form_state){
     $form['s2']['filtered_map']['available_germplasm']['#rows'] = 5;
     $form['s2']['filtered_map']['available_germplasm']['#disable'] = FALSE;
     $form['s2']['filtered_map']['germplasm_select'][['#rows']] = 5;
-    $form['s2']['filtered_map']['available_germplasm']['#value'] = $all_germplasm_names;
+    if ($all_germplasm_names){
+      $form['s2']['filtered_map']['available_germplasm']['#value'] = $all_germplasm_names;
+    }
+
   }
 
   $form['s2']['filtered_map']['submit'] = array(
@@ -282,7 +283,14 @@ function haplotypemap_embed_form($form, &$form_state){
     '#value' => 'Filter',
   );
 
-  dpm ($form, '$form in form');
+  $form['cite'] = array(
+    '#type' => 'item',
+    //'#prefix' => '<div class="citation">',
+    '#suffix' => '</div>',
+    '#markup' => '<sup>+</sup> <a href="https://github.com/kiranbandi/haplotype-map">The Haplotype Map Viewer</a>, developed by Venkat Bandi.',
+  );
+
+  //dpm ($form, '$form in form');
   return $form;
 }
 
@@ -295,21 +303,27 @@ function haplotypemap_embed_form_validate($form, &$form_state){
     form_set_error('haplotypembed_file_id', 'You must choose a Haplotype Map file.');
   }
 
-  $all_germplasm_names = explode("\n", $form_state['values']['s2']['filtered_map']['available_germplasm']);
+  $all_germplasm_names = explode("\n", trim($form_state['values']['s2']['filtered_map']['available_germplasm']));
+  $all_germplasm_names = array_map('trim', $all_germplasm_names);
+
+  dpm($all_germplasm_names, '$all_germplasm_names in form_validate');
   if (empty($form_state['values']['s2']['filtered_map']['germplasm_select'])) {
     form_set_error('s2][filtered_map', 'You must provide germplasm name for filter');
   }
   else{
     // check if user input germplasm is less than 15
-    $user_input_germplasm = explode("\n",$form_state['values']['s2']['filtered_map']['germplasm_select']);
+    $user_input_germplasm = explode("\n", trim($form_state['values']['s2']['filtered_map']['germplasm_select']));
+    $user_input_germplasm = array_map('trim', $user_input_germplasm);
+
+    //dpm($user_input_germplasm, '$user_input_germplasm in form_validate');
     if(count($user_input_germplasm) > 15){
       form_set_error('s2][filtered_map', 'Please choose less than 15 germplasm.');
     }
     else{
-      foreach($user_input_germplasm as &$g){
+      foreach($user_input_germplasm as $g){
         // check if user input germplasm all have matches
-        if(in_array($g, $all_germplasm_names) == FALSE){
-          form_set_error('s2][filtered_map', 'Please double check input germplams names, which may not match to provided.');
+        if (in_array($g, $all_germplasm_names) == FALSE){
+          form_set_error('s2][filtered_map', "Please double check input germplams names, $g has no match to provided.");
           break;
         }
       }
