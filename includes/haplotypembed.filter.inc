@@ -1,22 +1,21 @@
 <?php
 
-/**
- * Implements hook_register_trpdownload_type().
- */
-function haplotypembed_register_trpdownload_type(){
-  $types = array();
+ /**
+  * Implements hook_register_trpdownload_type().
+  */
+ function haplotypembed_register_trpdownload_type(){
+   $types = array();
+   $types['haplotypembed_filter'] = array(
+     'type_name' => 'Filter Hapmap',
+     'format' => 'Hapmap Format',
+     'functions' => array(
+       'generate_file' => 'haplotypembed_filter_generate_file',
+       'summarize' => 'haplotypembed_filter_summary',
+     ),
+   );
+   return $types;
+ }
 
-  $types['haplotypembed_filter'] = array(
-    'type_name' => 'VCF Filter',
-    'format' => 'A/B Biparental Format',
-    'functions' => array(
-      'generate_file' => 'haplotypembed_filter_generate_file',
-      'summarize' => 'haplotypembed_filter_summary',
-    ),
-  );
-
-  return $types;
-}
 
 /**
  * Generates the file.
@@ -35,6 +34,50 @@ function haplotypembed_register_trpdownload_type(){
  */
 function haplotypembed_filter_generate_file($variables, $job_id = NULL){
   dpm($variables, '$variables in haplotypembed_filter_generate_file ');
+  //test
+  print_r($variables);
+  // Create the file and ready it for writting to.
+  $filepath = $variables['fullpath'] . $variables['filename'];
+  print "File: ".$filepath."\n";
+  // Get the VCF file details.
+  $one_hapmap_file = get_one_haplotype_map_file($variables['q']['haplotypembed_file_id']);
+  print "\nHapmap File (".$one_hapmap_file->human_readable_name."): ".$one_hapmap_file->file_path."\n";
+  // Check the input file still exists.
+  if (!file_exists($one_hapmap_file->file_path)) {
+    drush_set_error("ERROR: Original Hapmap file not found!");
+    exit(2);
+  }
+
+  // Print out parameters.
+  print "Parameters:\n";
+  foreach ($variables['q'] as $label => $value) {
+    print '  ' . $label . ': ' . $value."\n";
+  }
+
+  // Give the user some indication we've done something...
+  tripal_set_job_progress($job_id, 10);
+
+  // Filter.
+  //===============
+  print "\nFiltering the Hapmap File by Germplasm\n";
+  // hapmap_filter_by_germplasm($haplotypembed_file_id, $in_germplasm_wanted, $out_path)
+  $filtered_hapmap = hapmap_filter_by_germplasm($variables['q']['haplotypembed_file_id'], $variables['q']['selected_germplasm'], $filepath);
+  if (!$filtered_hapmap) {
+    exit(3);
+  }
+  tripal_set_job_progress($job_id, 90);
+
+  // Format. create symlink in libraries/haplotype-map/dist/data/filtered
+
+  //print "\n \n";
+  //shell_exec("ln");
+  if (!file_exists( $filepath )) {
+    drush_set_error("ERROR: Unable to move Filtered VCF into expected file director: $filepath");
+    exit(5); // We use exit to trigger a Tripal job error b/c Tripal doesn't check the return code :-(.
+  }
+
+  // Done!
+  tripal_set_job_progress($job_id, 100);
 }
 
 /**
@@ -104,7 +147,7 @@ function hapmap_filter_by_germplasm($haplotypembed_file_id, $in_germplasm_wanted
         $values_4_filtered_germplasm['string_value_in_order'] .= "\t";
       }
       $values_4_filtered_germplasm['string_value_in_order'] .= $values_4_filtered_germplasm[ $wanted_germplasm[count($wanted_germplasm)] ];
-      fwrite($handle_out,"$values_4_filtered_germplasm['string_value_in_order']\n");
+      fwrite($handle_out, ($values_4_filtered_germplasm['string_value_in_order']."\n"));
     }
     fclose($handle_out);
   }

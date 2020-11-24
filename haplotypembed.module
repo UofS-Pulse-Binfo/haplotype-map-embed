@@ -10,6 +10,8 @@
 
 require_once('includes/haplotypembed.embedpage.inc');
 
+require_once('includes/haplotypembed.filter.inc');
+
 /**
  * Implements hook_menu(). 1
  */
@@ -38,7 +40,7 @@ function haplotypembed_menu(){
   );
 
   $items['haplotype-map/filter'] = array(
-    'title' => 'Hapmap File Filter',
+    'title' => 'Filter Hapmpa by Germplasm',
     'description' => 'Filter hapmap files for user selected germplasm, then view in Haplotype Maps.',
     'page callback' => 'trpdownload_download_page',
     'page arguments' => array('haplotypembed_filter'),
@@ -269,7 +271,7 @@ function haplotypemap_embed_form($form, &$form_state){
     $form['s2']['filtered_map']['#collapsed'] = FALSE;
     $form['s2']['filtered_map']['available_germplasm']['#rows'] = 5;
     $form['s2']['filtered_map']['available_germplasm']['#disable'] = FALSE;
-    $form['s2']['filtered_map']['germplasm_select'][['#rows']] = 5;
+    $form['s2']['filtered_map']['germplasm_select']['#rows'] = 5;
     if ($all_germplasm_names){
       $form['s2']['filtered_map']['available_germplasm']['#value'] = $all_germplasm_names;
     }
@@ -337,7 +339,7 @@ function haplotypemap_embed_form_validate($form, &$form_state){
 function haplotypemap_embed_form_submit($form, &$form_state){
   $form_state['rebuild'] = FALSE;
 
-  $q = $form_state['values']['s2'];
+  $q['selected_germplasm'] = $form_state['values']['s2']['filtered_map']['germplasm_select'];
   $q['haplotypembed_file_id'] = $form_state['values']['haplotypembed_file_id'];
 
   $url = array(
