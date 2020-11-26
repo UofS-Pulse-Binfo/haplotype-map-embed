@@ -16,10 +16,6 @@ require_once('includes/haplotypembed.filter.inc');
  * Implements hook_menu(). 1
  */
 function haplotypembed_menu(){
-  // $default_map = NULL;
-  //
-  // //get all
-  // $h_maps = haplotype_extract_available_maps(, );
 
   $items = array();
 

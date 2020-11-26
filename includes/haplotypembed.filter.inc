@@ -1,5 +1,8 @@
 <?php
 
+  global $DRUPAL_ROOT;
+  global $base_url;
+
  /**
   * Implements hook_register_trpdownload_type().
   */
@@ -39,7 +42,7 @@ function haplotypembed_filter_generate_file($variables, $job_id = NULL){
   // Create the file and ready it for writting to.
   $filepath = $variables['fullpath'] . $variables['filename'];
   print "File: ".$filepath."\n";
-  // Get the VCF file details.
+  // Get the hapmap file details.
   $one_hapmap_file = get_one_haplotype_map_file($variables['q']['haplotypembed_file_id']);
   print "\nHapmap File (".$one_hapmap_file->human_readable_name."): ".$one_hapmap_file->file_path."\n";
   // Check the input file still exists.
@@ -60,20 +63,29 @@ function haplotypembed_filter_generate_file($variables, $job_id = NULL){
   // Filter.
   //===============
   print "\nFiltering the Hapmap File by Germplasm\n";
+
   // hapmap_filter_by_germplasm($haplotypembed_file_id, $in_germplasm_wanted, $out_path)
-  $filtered_hapmap = hapmap_filter_by_germplasm($variables['q']['haplotypembed_file_id'], $variables['q']['selected_germplasm'], $filepath);
-  if (!$filtered_hapmap) {
+  hapmap_filter_by_germplasm($one_hapmap_file->file_path, $variables['q']['selected_germplasm'], $filepath);
+
+  print "Filter of $filtered_hapmap finished.";
+  if (!$filepath) {
     exit(3);
   }
   tripal_set_job_progress($job_id, 90);
 
   // Format. create symlink in libraries/haplotype-map/dist/data/filtered
 
-  //print "\n \n";
-  //shell_exec("ln");
+  print "\nCreate softlink to haplotype map in library under directory /dist/data/filtered\n";
+  $file_path_in_library = $DRUPAL_ROOT.libraries_get_path('haplotype-map', $base_path = TRUE).'/dist/data/filtered/';
+  $filtered_hapmap_name = str_replace('KnowPulse.haplotypembed_filter', basename($one_hapmap_file->file_path, '.txt'), basename($filepath));
+  print 'Path to module haplotype map: '.$file_path_in_library.$filtered_hapmap_name."\n";
+  print 'File path after filter: '.$filepath."\n";
+  print '$DRUPAL_ROOT: '.$DRUPAL_ROOT."\n";
+  print '$base_url: '.$base_url."\n";
+  //shell_exec("ln $filepath");
   if (!file_exists( $filepath )) {
-    drush_set_error("ERROR: Unable to move Filtered VCF into expected file director: $filepath");
-    exit(5); // We use exit to trigger a Tripal job error b/c Tripal doesn't check the return code :-(.
+    drush_set_error("ERROR: Unable to move Filtered file into expected file director: $filepath");
+    exit(4); // We use exit to trigger a Tripal job error b/c Tripal doesn't check the return code :-(.
   }
 
   // Done!
@@ -91,65 +103,67 @@ function haplotypembed_filter_generate_file($variables, $job_id = NULL){
  * @return
  *   A string representing the summary (can include html).
  */
-function haplotypembed_filter_summary($vars){
-
-
-}
+ function haplotypembed_filter_summary($vars){
+   print_r($vars);
+   $q =  $vars['download_args']['q'];
+   $output = '';
+   $output .= '<span>The Haplotyp map for this filtered hapmap file: </span>';
+   $one_hapmap = get_one_haplotype_map_file($q['haplotypembed_file_id']);
+   $output .= l($one_hapmap->human_readable_name.' Haplotype Map for filtered germplasm', '/haplotype-map/view', ['query' => ['source' => pathinfo(basename($one_hapmap->default_file_path), PATHINFO_FILENAME)]]).'.';
+   return $output;
+ }
 
 /**
  * hapmap filter by germplasm
  */
-function hapmap_filter_by_germplasm($haplotypembed_file_id, $in_germplasm_wanted, $out_path){
+  function hapmap_filter_by_germplasm($file_need_filter, $in_germplasm_wanted, $out_hapmap_file_fullpath){
 
-  $file_need_filter = get_one_haplotype_map_file($haplotypembed_file_id);
+    //write into path using same name from inpufile
+    $handle_out = fopen($out_hapmap_file_fullpath,'w') or die ("\nCannot create file: $out_hapmap_file_fullpath .\n");
 
-  $out_hapmap_filename = $out_path . basename($file_need_filter['file_path']);
-  //write into path using same name from inpufile
-  $handle_out = fopen($out_hapmap_filename,'w') or die ("\nCannot create file: $out_hapmap_filename .\n");
+    print 'Haplotype map ' . $file_need_filter . ' will be filtered' . "\n";
 
-  print 'Haplotype map ' . $file_need_filter->human_readable_name . 'will be filtered' . "\n";
-
-  // trim each germplasm
-  $wanted_germplasm = explode("\n", $in_germplasm_wanted);
-  for($i = 0; $i < count($wanted_germplasm); $i++){
-    $wanted_germplasm[$i] = trim($wanted_germplasm[$i]);
-    //$wanted_germplasm_in_order[ $wanted_germplasm[$i] ] = $wanted_germplasm[$i];
-  }
-
-  // read the file, print into new file in order of user selected germplasm
-  foreach (new SplFileObject($in_vcf_filename) as $line) {
-    $line = trim($line);
-    if (preg_match('/^rs#/', $line)) {
-      // determine the germplasm column number in hapmap file first
-      $header = explode("\t", $line);
-      for ($j = 11; $j < count($header); $j++){
-        if ( in_array($header[$j], $wanted_germplasm) ){
-          $flag_germplasm_column_order[$j] = $header[$j];
-        }
-      }
-      //print header into the file
-      fwrite($handle_out, ("rs#\talleles\tchrom\tpos\tstrand\tassembly#\tcenter\tprotLSID\tassayLSID\tpanel\tQCcode\t"));
-      fwrite($handle_out, (improde("\t", $flag_germplasm_column_order)."\n"));
+    // trim each germplasm
+    $wanted_germplasm = explode("\n", $in_germplasm_wanted);
+    for($i = 0; $i < count($wanted_germplasm); $i++){
+      $wanted_germplasm[$i] = trim($wanted_germplasm[$i]);
+      //$wanted_germplasm_in_order[ $wanted_germplasm[$i] ] = $wanted_germplasm[$i];
     }
-    else{
-      $values_4_filtered_germplasm['string_value_in_order'] = '';
-      $one_line = explode("\t", $line);
-      for ($i = 0; $i < 11; $i++){
-        fwrite($handle_out, "$one_line[$i]\t");
-      }
-      for ($j = 11; $j < count($one_line); $j++){
-        if (array_key_exists($j, $flag_germplasm_column_order)){
-          $values_4_filtered_germplasm[ $flag_germplasm_column_order[$j] ] = $one_line[$j];
+
+    // read the file, print into new file in order of user selected germplasm
+    foreach (new SplFileObject($file_need_filter) as $line) {
+      $line = trim($line);
+      if (preg_match('/^rs#/', $line)) {
+        // determine the germplasm column number in hapmap file first
+        $header = explode("\t", $line);
+        for ($j = 11; $j < count($header); $j++){
+          if ( in_array($header[$j], $wanted_germplasm) ){
+            $flag_germplasm_column_order[$j] = $header[$j];
+          }
         }
+        //print header into the file
+        fwrite($handle_out, ("rs#\talleles\tchrom\tpos\tstrand\tassembly#\tcenter\tprotLSID\tassayLSID\tpanel\tQCcode\t"));
+        fwrite($handle_out, (implode("\t", $flag_germplasm_column_order)."\n"));
       }
-      for($i=0; $i<(count($wanted_germplasm)-1); $i++){
-        $values_4_filtered_germplasm['string_value_in_order'] .= $values_4_filtered_germplasm[ $wanted_germplasm[$i] ];
-        $values_4_filtered_germplasm['string_value_in_order'] .= "\t";
+      else{
+        $values_4_filtered_germplasm['string_value_in_order'] = '';
+        $one_line = explode("\t", $line);
+        for ($i = 0; $i < 11; $i++){
+          fwrite($handle_out, "$one_line[$i]\t");
+        }
+        for ($j = 11; $j < count($one_line); $j++){
+          if (array_key_exists($j, $flag_germplasm_column_order)){
+            $values_4_filtered_germplasm[ $flag_germplasm_column_order[$j] ] = $one_line[$j];
+          }
+        }
+        for($i=0; $i<(count($wanted_germplasm)-1); $i++){
+          $values_4_filtered_germplasm['string_value_in_order'] .= $values_4_filtered_germplasm[ $wanted_germplasm[$i] ];
+          $values_4_filtered_germplasm['string_value_in_order'] .= "\t";
+        }
+        $values_4_filtered_germplasm['string_value_in_order'] .= $values_4_filtered_germplasm[ $wanted_germplasm[(count($wanted_germplasm)-1)] ];
+        fwrite($handle_out, ($values_4_filtered_germplasm['string_value_in_order']."\n"));
       }
-      $values_4_filtered_germplasm['string_value_in_order'] .= $values_4_filtered_germplasm[ $wanted_germplasm[count($wanted_germplasm)] ];
-      fwrite($handle_out, ($values_4_filtered_germplasm['string_value_in_order']."\n"));
     }
     fclose($handle_out);
+    // save file in temp, create soft link to $out_path, also make it unique
   }
-  // save file in temp, create soft link to $out_path, also make it unique
-}
