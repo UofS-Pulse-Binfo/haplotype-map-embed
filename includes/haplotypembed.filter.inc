@@ -1,8 +1,5 @@
 <?php
 
-  global $DRUPAL_ROOT;
-  global $base_url;
-
  /**
   * Implements hook_register_trpdownload_type().
   */
@@ -36,10 +33,8 @@
  *   The ID of the tripal job executing this function ;-).
  */
 function haplotypembed_filter_generate_file($variables, $job_id = NULL){
-  dpm($variables, '$variables in haplotypembed_filter_generate_file ');
-  //test
-  print_r($variables);
-  // Create the file and ready it for writting to.
+
+  // Create the file and prepare it for writting to.
   $filepath = $variables['fullpath'] . $variables['filename'];
   print "File: ".$filepath."\n";
   // Get the hapmap file details.
@@ -67,22 +62,21 @@ function haplotypembed_filter_generate_file($variables, $job_id = NULL){
   // hapmap_filter_by_germplasm($haplotypembed_file_id, $in_germplasm_wanted, $out_path)
   hapmap_filter_by_germplasm($one_hapmap_file->file_path, $variables['q']['selected_germplasm'], $filepath);
 
-  print "Filter of $filtered_hapmap finished.";
+  print "Filter of $one_hapmap_file->file_path finished.\n";
+  print "Filtered file in: $filepath\n\n";
   if (!$filepath) {
     exit(3);
   }
   tripal_set_job_progress($job_id, 90);
 
   // Format. create symlink in libraries/haplotype-map/dist/data/filtered
-
-  print "\nCreate softlink to haplotype map in library under directory /dist/data/filtered\n";
-  $file_path_in_library = $DRUPAL_ROOT.libraries_get_path('haplotype-map', $base_path = TRUE).'/dist/data/filtered/';
-  $filtered_hapmap_name = str_replace('KnowPulse.haplotypembed_filter', basename($one_hapmap_file->file_path, '.txt'), basename($filepath));
-  print 'Path to module haplotype map: '.$file_path_in_library.$filtered_hapmap_name."\n";
-  print 'File path after filter: '.$filepath."\n";
-  print '$DRUPAL_ROOT: '.$DRUPAL_ROOT."\n";
-  print '$base_url: '.$base_url."\n";
-  //shell_exec("ln $filepath");
+  // Maybe: change file name
+  //str_replace('haplotypembed_filter', basename($one_hapmap_file->file_path, '.txt'), basename($filepath))
+  $filtered_hapmap_name = DRUPAL_ROOT.'/'.libraries_get_path('haplotype-map', $base_path = FALSE).'/dist/data/filtered/'.basename($filepath);
+  //print 'Path to module haplotype map: '.$filtered_hapmap_name."\n";
+  //print 'File path after filter: '.$filepath."\n";
+  print 'Create softlink to provide file to Haplotype-map module: '.$filepath."\n".'to path: '. $filtered_hapmap_name."\n";
+  shell_exec("ln -s $filepath $filtered_hapmap_name");
   if (!file_exists( $filepath )) {
     drush_set_error("ERROR: Unable to move Filtered file into expected file director: $filepath");
     exit(4); // We use exit to trigger a Tripal job error b/c Tripal doesn't check the return code :-(.
@@ -104,12 +98,10 @@ function haplotypembed_filter_generate_file($variables, $job_id = NULL){
  *   A string representing the summary (can include html).
  */
  function haplotypembed_filter_summary($vars){
-   print_r($vars);
-   $q =  $vars['download_args']['q'];
    $output = '';
    $output .= '<span>The Haplotyp map for this filtered hapmap file: </span>';
-   $one_hapmap = get_one_haplotype_map_file($q['haplotypembed_file_id']);
-   $output .= l($one_hapmap->human_readable_name.' Haplotype Map for filtered germplasm', '/haplotype-map/view', ['query' => ['source' => pathinfo(basename($one_hapmap->default_file_path), PATHINFO_FILENAME)]]).'.';
+   $one_hapmap = get_one_haplotype_map_file($vars['download_args']['q']['haplotypembed_file_id']);
+   $output .= l($one_hapmap->human_readable_name.' Haplotype Map for filtered germplasm', '/haplotype-map/view', ['query' => ['source' => 'filtered/'.pathinfo($vars['download_args']['filename'], PATHINFO_FILENAME)]]).'.';
    return $output;
  }
 
@@ -148,9 +140,10 @@ function haplotypembed_filter_generate_file($variables, $job_id = NULL){
       else{
         $values_4_filtered_germplasm['string_value_in_order'] = '';
         $one_line = explode("\t", $line);
-        for ($i = 0; $i < 11; $i++){
-          fwrite($handle_out, "$one_line[$i]\t");
-        }
+        // for ($i = 0; $i < 11; $i++){
+        //   fwrite($handle_out, "$one_line[$i]\t");
+        // }
+        fwrite($handle_out, (str_replace('Lcu.2RBY.Chr', 'Ch', $one_line[0])."\t".$one_line[1]."\t".str_replace('Lcu.2RBY.Chr', 'Ch',$one_line[2])."\t".$one_line[3]."\t"));
         for ($j = 11; $j < count($one_line); $j++){
           if (array_key_exists($j, $flag_germplasm_column_order)){
             $values_4_filtered_germplasm[ $flag_germplasm_column_order[$j] ] = $one_line[$j];

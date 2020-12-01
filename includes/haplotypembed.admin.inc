@@ -179,6 +179,9 @@
         drupal_write_record('haplotypembed_files', $record, 'haplotypembed_file_id');
       }
     }
+    // create soft link to module haplotype-map dist/data for default file
+    $path_to_module_data = DRUPAL_ROOT.'/'.libraries_get_path('haplotype-map', $base_path = FALSE).'/dist/data/'.basename($form_state['values']['default_file']);
+    shell_exec("ln -s $form_state['values']['default_file'] $path_to_module_data");
   }
 
   function haplotypemap_embed_admin_file_perm_form($form, &$form_state){
