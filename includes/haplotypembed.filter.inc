@@ -98,10 +98,13 @@ function haplotypembed_filter_generate_file($variables, $job_id = NULL){
  *   A string representing the summary (can include html).
  */
  function haplotypembed_filter_summary($vars){
+   drupal_add_css(drupal_get_path('module', 'haplotypembed') . '/theme/haplotypembed.filter.css');
    $output = '';
    $output .= '<span>The Haplotyp map for this filtered hapmap file: </span>';
    $one_hapmap = get_one_haplotype_map_file($vars['download_args']['q']['haplotypembed_file_id']);
    $output .= l($one_hapmap->human_readable_name.' Haplotype Map for filtered germplasm', '/haplotype-map/view', ['query' => ['source' => 'filtered/'.pathinfo($vars['download_args']['filename'], PATHINFO_FILENAME)]]).'.';
+   //$output .= <a href=l($one_hapmap->human_readable_name.' Haplotype Map for filtered germplasm', '/haplotype-map/view', ['query' => ['source' => 'filtered/'.pathinfo($vars['download_args']['filename'], PATHINFO_FILENAME)]]) class="button">Haplotype Map</a>;
+   $output .= '<a href='.l($one_hapmap->human_readable_name.' Haplotype Map for filtered germplasm', '/haplotype-map/view', ['query' => ['source' => 'filtered/'.pathinfo($vars['download_args']['filename'], PATHINFO_FILENAME)]]).' class="button">Haplotype Map</a>';
    return $output;
  }
 

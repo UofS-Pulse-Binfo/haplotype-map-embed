@@ -138,8 +138,25 @@ function haplotypembed_libraries_info(){
  * Implements hook_form().
  */
 function haplotypemap_embed_form($form, &$form_state){
+
+  $form['#attached']['css'][] = array(
+    'data' => '
+    span.stages {
+      width: 45px;
+      float: left;
+      position: relative;
+      top: -5px;
+      padding-right: 5px;
+      font-size: 32px;
+      line-height: 1;
+      font-weight: bold;
+      text-align: right;
+      color: #314355;
+    }
+    ',
+    'type' => 'inline',
+  );
   // check for available dataset, ask user to pick and feed to haplotype-map
-  global $base_path;
   // Path to module.
   $module_path = drupal_get_path('module', 'haplotypembed');
   // Relative Path to Library.
@@ -187,7 +204,7 @@ function haplotypemap_embed_form($form, &$form_state){
       'effect' => 'fade',
     ),
   );
-  
+
   if (isset($_GET['haplotypembed_file_id']) AND is_numeric($_GET['haplotypembed_file_id'])) {
     $form['s1']['haplotypembed_file_id']['#default_value'] = $_GET['haplotypembed_file_id'];
   }
