@@ -100,16 +100,17 @@ function haplotypembed_filter_generate_file($variables, $job_id = NULL){
  function haplotypembed_filter_summary($vars){
    drupal_add_css(drupal_get_path('module', 'haplotypembed') . '/theme/haplotypembed.filter.css');
    $output = '';
-   $output .= '<span>The Haplotyp map for this filtered hapmap file: </span>';
+   $output .= 'The Haplotyp map including filtered germplasm: <br /><br />';
    $one_hapmap = get_one_haplotype_map_file($vars['download_args']['q']['haplotypembed_file_id']);
-   $output .= l($one_hapmap->human_readable_name.' Haplotype Map for filtered germplasm', '/haplotype-map/view', ['query' => ['source' => 'filtered/'.pathinfo($vars['download_args']['filename'], PATHINFO_FILENAME)]]).'.';
-   //$output .= <a href=l($one_hapmap->human_readable_name.' Haplotype Map for filtered germplasm', '/haplotype-map/view', ['query' => ['source' => 'filtered/'.pathinfo($vars['download_args']['filename'], PATHINFO_FILENAME)]]) class="button">Haplotype Map</a>;
-   $output .= '<a href='.l($one_hapmap->human_readable_name.' Haplotype Map for filtered germplasm', '/haplotype-map/view', ['query' => ['source' => 'filtered/'.pathinfo($vars['download_args']['filename'], PATHINFO_FILENAME)]]).' class="button">Haplotype Map</a>';
+   $output .= l($one_hapmap->human_readable_name.' Haplotype Map', '/haplotype-map/view', [
+     'query' => ['source' => 'filtered/'.pathinfo($vars['download_args']['filename'], PATHINFO_FILENAME)],
+     'attributes' => ['title' => t('Haplotype Map.'), 'class' => 'button', 'html' => 'TRUE']]
+   );
    return $output;
  }
 
 /**
- * hapmap filter by germplasm
+ * hapmap filter by germplasm, germplasm order must be consistent with order from input
  */
   function hapmap_filter_by_germplasm($file_need_filter, $in_germplasm_wanted, $out_hapmap_file_fullpath){
 
@@ -143,9 +144,7 @@ function haplotypembed_filter_generate_file($variables, $job_id = NULL){
       else{
         $values_4_filtered_germplasm['string_value_in_order'] = '';
         $one_line = explode("\t", $line);
-        // for ($i = 0; $i < 11; $i++){
-        //   fwrite($handle_out, "$one_line[$i]\t");
-        // }
+
         fwrite($handle_out, (str_replace('Lcu.2RBY.Chr', 'Ch', $one_line[0])."\t".$one_line[1]."\t".str_replace('Lcu.2RBY.Chr', 'Ch',$one_line[2])."\t".$one_line[3]."\t"));
         for ($j = 11; $j < count($one_line); $j++){
           if (array_key_exists($j, $flag_germplasm_column_order)){
